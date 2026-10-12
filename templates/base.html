@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+  {% include "partials/head.html" %}
+  <title>{% block title %}FinançasPro{% endblock %}</title>
+</head>
+<body class="h-full bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 flex flex-col overflow-hidden">
+
+<div class="flex h-full w-full overflow-hidden">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col z-20 transition-transform duration-300 -translate-x-full md:translate-x-0 absolute md:relative h-full">
+    <div class="p-6 border-b border-slate-100 dark:border-slate-700/50 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-brand-500/20">
+          <i class="fa-solid fa-wallet"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg tracking-tight leading-none">Isa Finanças</h1>
+          <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Gestão Pessoal</span>
+        </div>
+      </div>
+      <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+        <i class="fa-solid fa-xmark text-xl"></i>
+      </button>
+    </div>
+
+    <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto custom-scrollbar">
+      <a href="{% url 'dashboard' %}"
+         class="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors {% if request.resolver_match.url_name == 'dashboard' %}bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-400{% else %}text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50{% endif %}">
+        <i class="fa-solid fa-chart-pie w-5 text-center"></i><span>Dashboard</span>
+      </a>
+      <a href="{% url 'lancamentos:lista' %}"
+         class="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors {% if request.resolver_match.app_name == 'lancamentos' %}bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-400{% else %}text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50{% endif %}">
+        <i class="fa-solid fa-right-left w-5 text-center"></i><span>Lançamentos</span>
+      </a>
+
+      <!-- Telas ainda não construídas: abrem o painel admin por enquanto -->
+      <a href="{% url 'orcamento:lista' %}"
+         class="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors {% if request.resolver_match.app_name == 'orcamento' %}bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-400{% else %}text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50{% endif %}">
+        <i class="fa-solid fa-bullseye w-5 text-center"></i><span>Orçamento</span>
+      </a>
+      <a href="/admin/pagar/contapagar/" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+        <i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i><span class="flex-1">Contas a Pagar</span><em class="not-italic text-[10px] text-slate-400 border border-slate-200 dark:border-slate-600 rounded-full px-2">admin</em>
+      </a>
+      <a href="/admin/contas/conta/" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+        <i class="fa-solid fa-vault w-5 text-center"></i><span class="flex-1">Patrimônio</span><em class="not-italic text-[10px] text-slate-400 border border-slate-200 dark:border-slate-600 rounded-full px-2">admin</em>
+      </a>
+      <a href="/admin/metas/meta/" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+        <i class="fa-solid fa-mountain-sun w-5 text-center"></i><span class="flex-1">Metas</span><em class="not-italic text-[10px] text-slate-400 border border-slate-200 dark:border-slate-600 rounded-full px-2">admin</em>
+      </a>
+    </nav>
+
+    <!-- Usuário e tema -->
+    <div class="p-4 border-t border-slate-100 dark:border-slate-700/50 flex items-center justify-between">
+      <div class="flex items-center space-x-3 min-w-0">
+        <div class="w-9 h-9 shrink-0 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-semibold text-sm">
+          {{ request.user.username|slice:":2"|upper }}
+        </div>
+        <div class="min-w-0">
+          <p class="text-sm font-semibold leading-none truncate">{{ request.user.get_full_name|default:request.user.username }}</p>
+          <span class="text-xs text-slate-500 dark:text-slate-400 block truncate">{{ request.user.email|default:"sem e-mail" }}</span>
+        </div>
+      </div>
+      <div class="flex items-center">
+        <button onclick="toggleDarkMode()" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="Alternar tema">
+          <i id="theme-icon" class="fa-solid fa-moon"></i>
+        </button>
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="Sair">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Conteúdo -->
+  <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 h-16 px-6 flex items-center justify-between shrink-0 z-10">
+      <div class="flex items-center space-x-4">
+        <button onclick="toggleSidebar()" class="md:hidden text-slate-600 dark:text-slate-300 text-lg">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <h2 class="text-xl font-bold tracking-tight">{% block h1 %}{% endblock %}</h2>
+      </div>
+      <div class="flex items-center space-x-3">
+        {% block filtros %}{% endblock %}
+      </div>
+    </header>
+
+    <div class="flex-1 overflow-y-auto custom-scrollbar p-6 bg-slate-100 dark:bg-slate-900">
+      {% for m in messages %}
+        <div class="mb-4 px-4 py-3 rounded-xl text-sm font-medium {% if m.tags == 'error' %}bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400{% else %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400{% endif %}">{{ m }}</div>
+      {% endfor %}
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</div>
+
+<script>
+  function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("-translate-x-full");
+  }
+  function atualizarIconeTema() {
+    var escuro = document.documentElement.classList.contains("dark");
+    document.getElementById("theme-icon").className = escuro ? "fa-solid fa-sun" : "fa-solid fa-moon";
+  }
+  function toggleDarkMode() {
+    var html = document.documentElement;
+    html.classList.toggle("dark");
+    try { localStorage.setItem("tema", html.classList.contains("dark") ? "dark" : "light"); } catch (e) {}
+    atualizarIconeTema();
+    window.dispatchEvent(new Event("tema-alterado")); // o dashboard escuta isto para redesenhar os gráficos
+  }
+  atualizarIconeTema();
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load formatos %}
+{% block title %}Orçamento - FinançasPro{% endblock %}
+{% block h1 %}Orçamento Mensal{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Cabeçalho: mês, navegação e totais -->
+  <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <h3 class="font-bold text-lg">Orçamento Mensal por Categoria</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Defina tetos de gastos para manter suas finanças sob controle.</p>
+      </div>
+      <div class="flex items-center space-x-2">
+        <a href="?mes={{ mes_anterior }}" class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="Mês anterior"><i class="fa-solid fa-chevron-left"></i></a>
+        <span class="font-bold text-base w-40 text-center">{{ mes|date:"F / Y"|capfirst }}</span>
+        <a href="?mes={{ mes_seguinte }}" class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="Próximo mês"><i class="fa-solid fa-chevron-right"></i></a>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-100 dark:border-slate-700/50">
+      <div>
+        <span class="text-xs text-slate-400 block">Planejado</span>
+        <span class="font-bold text-lg">{{ totais.planejado|brl }}</span>
+      </div>
+      <div>
+        <span class="text-xs text-slate-400 block">Realizado (categorias com limite)</span>
+        <span class="font-bold text-lg">{{ totais.realizado|brl }}</span>
+      </div>
+      <div>
+        <span class="text-xs text-slate-400 block">Gasto sem orçamento</span>
+        <span class="font-bold text-lg {% if totais.sem_orcamento %}text-amber-600 dark:text-amber-400{% endif %}">{{ totais.sem_orcamento|brl }}</span>
+      </div>
+    </div>
+
+    <form method="post" action="{% url 'orcamento:copiar' %}" class="pt-4 border-t border-slate-100 dark:border-slate-700/50">
+      {% csrf_token %}
+      <input type="hidden" name="mes" value="{{ mes_param }}">
+      <button type="submit" class="px-4 py-2 rounded-xl text-sm font-medium bg-brand-50 text-brand-700 hover:bg-brand-100 dark:bg-brand-950/40 dark:text-brand-400 transition-colors">
+        <i class="fa-regular fa-copy mr-1"></i> Copiar limites do mês anterior
+      </button>
+      <span class="text-xs text-slate-400 ml-2">Só preenche as categorias que ainda não têm limite neste mês.</span>
+    </form>
+  </div>
+
+  <!-- Cards por categoria -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for i in itens %}
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border {% if i.limite %}border-slate-200 dark:border-slate-700 shadow-sm{% else %}border-dashed border-slate-300 dark:border-slate-600{% endif %} space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3 min-w-0">
+          <div class="w-10 h-10 shrink-0 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center">
+            <i class="fa-solid {{ i.categoria.icone|default:'fa-tag' }}"></i>
+          </div>
+          <div class="min-w-0">
+            <h4 class="font-bold text-base leading-tight truncate">{{ i.categoria.nome }}</h4>
+            <span class="text-xs text-slate-400">{% if i.limite %}Teto mensal{% else %}Sem limite definido{% endif %}</span>
+          </div>
+        </div>
+        {% if i.limite %}
+          {% if i.nivel == "estourado" %}<span class="text-xs px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 font-medium shrink-0">Estourado</span>
+          {% elif i.nivel == "alerta" %}<span class="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 font-medium shrink-0">Atenção</span>
+          {% else %}<span class="text-xs px-2 py-0.5 rounded-full bg-brand-50 text-brand-600 font-medium shrink-0">Dentro do limite</span>{% endif %}
+        {% endif %}
+      </div>
+
+      {% if i.limite %}
+      <div>
+        <div class="flex justify-between text-sm mb-1">
+          <span class="font-bold">{{ i.realizado|brl }}</span>
+          <span class="text-slate-400">Limite: <strong class="text-slate-700 dark:text-slate-200">{{ i.limite|brl }}</strong></span>
+        </div>
+        <div class="w-full bg-slate-100 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
+          <div class="h-full rounded-full {% if i.nivel == 'estourado' %}bg-rose-500{% elif i.nivel == 'alerta' %}bg-amber-500{% else %}bg-brand-500{% endif %}" style="width: {{ i.pct_barra|floatformat:'1u' }}%;"></div>
+        </div>
+      </div>
+      <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700/50 text-xs">
+        <span class="text-slate-400">{% if i.restante < 0 %}Estourou em{% else %}Restante:{% endif %} <strong class="{% if i.restante < 0 %}text-rose-600{% else %}text-emerald-600{% endif %}">{{ i.restante|brl }}</strong></span>
+        <a href="{% url 'orcamento:editar' i.categoria.pk %}?mes={{ mes_param }}" class="text-brand-600 hover:underline font-medium">Editar limite</a>
+      </div>
+      {% else %}
+      <div class="flex items-center justify-between text-sm">
+        <span class="text-slate-400">Gasto no mês</span>
+        <span class="font-bold">{{ i.realizado|brl }}</span>
+      </div>
+      <div class="pt-2 border-t border-slate-100 dark:border-slate-700/50 text-xs">
+        <a href="{% url 'orcamento:editar' i.categoria.pk %}?mes={{ mes_param }}" class="text-brand-600 hover:underline font-medium">Definir limite</a>
+      </div>
+      {% endif %}
+    </div>
+    {% empty %}
+    <p class="text-sm text-slate-400 col-span-full text-center py-10">Nenhuma categoria de despesa cadastrada. Cadastre em Admin &gt; Categorias.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

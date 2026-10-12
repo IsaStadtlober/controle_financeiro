@@ -1,0 +1,5 @@
+<div data-campo="{{ campo.name }}">
+  <label for="{{ campo.id_for_label }}" class="block text-xs font-semibold text-slate-500 uppercase mb-1">{{ rotulo|default:campo.label }}</label>
+  {{ campo }}
+  {% for e in campo.errors %}<p class="text-xs text-rose-600 mt-1">{{ e }}</p>{% endfor %}
+</div>

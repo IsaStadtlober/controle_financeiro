@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }} - FinançasPro{% endblock %}
+{% block h1 %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<form method="post" class="max-w-lg mx-auto bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 space-y-4">
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+    <div class="px-4 py-3 rounded-xl text-sm font-medium bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400">{{ form.non_field_errors }}</div>
+  {% endif %}
+
+  <!-- Seletor de tipo (os botões controlam o campo "tipo", que fica escondido) -->
+  <div class="grid grid-cols-3 gap-2 p-1 bg-slate-100 dark:bg-slate-900 rounded-xl">
+    <button type="button" data-tipo="despesa">Despesa</button>
+    <button type="button" data-tipo="receita">Receita</button>
+    <button type="button" data-tipo="transferencia">Transferência</button>
+  </div>
+  <div class="hidden">{{ form.tipo }}</div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    {% include "partials/campo.html" with campo=form.valor rotulo="Valor (R$)" %}
+    {% include "partials/campo.html" with campo=form.data rotulo="Data" %}
+  </div>
+
+  {% include "partials/campo.html" with campo=form.descricao rotulo="Descrição" %}
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    {% include "partials/campo.html" with campo=form.categoria rotulo="Categoria" %}
+    {% include "partials/campo.html" with campo=form.conta rotulo="Conta" %}
+  </div>
+
+  {% include "partials/campo.html" with campo=form.conta_destino rotulo="Conta de destino" %}
+
+  <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-700/50">
+    <a href="{% url 'lancamentos:lista' %}" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">Cancelar</a>
+    <button type="submit" class="px-5 py-2 rounded-xl text-sm font-medium bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-500/20 transition-colors">Salvar Lançamento</button>
+  </div>
+</form>
+{{ categorias_json|json_script:"categorias-json" }}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var categorias = JSON.parse(document.getElementById("categorias-json").textContent);
+  var selTipo = document.getElementById("id_tipo");
+  var selCat = document.getElementById("id_categoria");
+  var botoes = document.querySelectorAll("button[data-tipo]");
+  var campo = function (n) { return document.querySelector('[data-campo="' + n + '"]'); };
+  var selecionada = selCat.value;
+
+  var BASE = "py-2 text-xs font-semibold rounded-lg transition-all ";
+  var ATIVO = {
+    despesa: "bg-white dark:bg-slate-800 text-rose-600 shadow-sm",
+    receita: "bg-white dark:bg-slate-800 text-emerald-600 shadow-sm",
+    transferencia: "bg-white dark:bg-slate-800 text-blue-600 shadow-sm"
+  };
+  var INATIVO = "text-slate-600 dark:text-slate-400";
+
+  function atualizar() {
+    var tipo = selTipo.value;
+    var transf = tipo === "transferencia";
+
+    // botões do seletor
+    botoes.forEach(function (b) {
+      b.className = BASE + (b.dataset.tipo === tipo ? ATIVO[tipo] : INATIVO);
+    });
+
+    // mostra só os campos que fazem sentido para o tipo
+    campo("categoria").classList.toggle("hidden", transf);
+    campo("conta_destino").classList.toggle("hidden", !transf);
+    campo("conta").querySelector("label").textContent = transf ? "Conta de origem" : "Conta";
+
+    // categorias: só as do tipo escolhido
+    selCat.innerHTML = '<option value="">---------</option>';
+    categorias.filter(function (c) { return c.tipo === tipo; }).forEach(function (c) {
+      selCat.add(new Option(c.nome, c.id, false, String(c.id) === String(selecionada)));
+    });
+  }
+
+  botoes.forEach(function (b) {
+    b.addEventListener("click", function () { selTipo.value = b.dataset.tipo; atualizar(); });
+  });
+  selCat.addEventListener("change", function () { selecionada = selCat.value; });
+  atualizar();
+})();
+</script>
+{% endblock %}

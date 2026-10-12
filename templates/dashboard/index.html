@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% load formatos %}
+{% block title %}Dashboard - FinançasPro{% endblock %}
+{% block h1 %}Dashboard{% endblock %}
+
+{% block filtros %}
+<form method="get" class="flex items-center space-x-3">
+  <div class="flex items-center space-x-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm">
+    <i class="fa-regular fa-calendar text-slate-400"></i>
+    <select name="periodo" onchange="this.form.submit()" class="bg-transparent border-none focus:outline-none cursor-pointer font-medium">
+      {% for chave, rotulo in periodos.items %}
+        <option value="{{ chave }}" {% if chave == periodo %}selected{% endif %} class="dark:bg-slate-800">{{ rotulo }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="hidden sm:flex items-center space-x-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm">
+    <i class="fa-solid fa-piggy-bank text-slate-400"></i>
+    <select name="conta" onchange="this.form.submit()" class="bg-transparent border-none focus:outline-none cursor-pointer font-medium">
+      <option value="" class="dark:bg-slate-800">Todas as contas</option>
+      {% for c in contas %}
+        <option value="{{ c.pk }}" {% if c.pk == conta_id %}selected{% endif %} class="dark:bg-slate-800">{{ c.nome }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</form>
+{% endblock %}
+
+{% block content %}
+<section class="space-y-6">
+  <p class="text-xs text-slate-400 -mb-2">Período: {{ periodo_rotulo }}</p>
+
+  <!-- Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-slate-500 dark:text-slate-400">Saldo Disponível</span>
+        <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold"><i class="fa-solid fa-wallet"></i></div>
+      </div>
+      <h3 class="text-2xl font-bold mt-4 tracking-tight">{{ cards.saldo|brl }}</h3>
+      <div class="mt-2 flex items-center text-xs text-slate-500 dark:text-slate-400">
+        <span>{% if conta_id %}Saldo da conta selecionada{% else %}Corrente, poupança e carteira{% endif %}</span>
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-slate-500 dark:text-slate-400">Receitas do Período</span>
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold"><i class="fa-solid fa-arrow-trend-up"></i></div>
+      </div>
+      <h3 class="text-2xl font-bold mt-4 tracking-tight text-emerald-600 dark:text-emerald-400">{{ cards.receitas|brl }}</h3>
+      {% include "dashboard/_variacao.html" with v=cards.var_receitas %}
+    </div>
+
+    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-slate-500 dark:text-slate-400">Despesas do Período</span>
+        <div class="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold"><i class="fa-solid fa-arrow-trend-down"></i></div>
+      </div>
+      <h3 class="text-2xl font-bold mt-4 tracking-tight text-rose-600 dark:text-rose-400">{{ cards.despesas|brl }}</h3>
+      {% include "dashboard/_variacao.html" with v=cards.var_despesas %}
+    </div>
+
+    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-slate-500 dark:text-slate-400">Resultado do Período</span>
+        <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold"><i class="fa-solid fa-scale-balanced"></i></div>
+      </div>
+      <h3 class="text-2xl font-bold mt-4 tracking-tight {% if cards.resultado < 0 %}text-rose-600 dark:text-rose-400{% else %}text-emerald-600 dark:text-emerald-400{% endif %}">{{ cards.resultado|brl }}</h3>
+      {% include "dashboard/_variacao.html" with v=cards.var_resultado %}
+    </div>
+  </div>
+
+  <!-- Gastos por categoria + ritmo de gasto -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-base">Gastos por Categoria</h3>
+        <span class="text-xs text-slate-400">Clique na barra para detalhes</span>
+      </div>
+      {% if graficos.categorias %}
+        <div class="relative" style="height: {{ altura_categorias }}px"><canvas id="chartCategory"></canvas></div>
+      {% else %}
+        <p class="text-xs text-slate-400 py-10 text-center">Nenhuma despesa neste período.</p>
+      {% endif %}
+    </div>
+
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-base">Ritmo de Gasto no Mês</h3>
+        <span class="text-xs text-slate-400">Acumulado diário vs mês anterior</span>
+      </div>
+      <div class="relative" style="height: 300px"><canvas id="chartPace"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Receitas x despesas + orçamento -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
+      <h3 class="font-bold text-base mb-4">Receitas x Despesas (Últimos 12 Meses)</h3>
+      <div class="relative" style="height: 280px"><canvas id="chartMonthly"></canvas></div>
+    </div>
+
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-base">Orçamento x Realizado</h3>
+        <span class="text-xs text-slate-400">{{ mes_orcamento|date:"m/Y" }}</span>
+      </div>
+      <div class="space-y-3">
+        {% for o in orcamento %}
+        <div class="space-y-1 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+          <div class="flex justify-between text-xs font-semibold">
+            <span>{{ o.nome }}</span>
+            <span>{{ o.realizado|brl }} / <span class="text-slate-400">{{ o.limite|brl }}</span></span>
+          </div>
+          <div class="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+            <div class="h-full rounded-full {% if o.nivel == 'estourado' %}bg-rose-500{% elif o.nivel == 'alerta' %}bg-amber-500{% else %}bg-brand-500{% endif %}" style="width: {{ o.pct_barra|floatformat:'1u' }}%;"></div>
+          </div>
+        </div>
+        {% empty %}
+          <a href="{% url 'orcamento:lista' %}" class="text-brand-600 hover:underline">Definir limites</a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Listas curtas -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <h3 class="font-bold text-base mb-4">5 Maiores Despesas do Período</h3>
+      <div class="divide-y divide-slate-100 dark:divide-slate-700/50">
+        {% for l in maiores %}
+        <div class="py-3 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 flex items-center justify-center text-sm"><i class="fa-solid fa-receipt"></i></div>
+            <div>
+              <p class="text-sm font-semibold leading-tight">{{ l.descricao|default:l.categoria }}</p>
+              <span class="text-xs text-slate-400">{{ l.data|date:"d/m/Y" }} • {{ l.categoria }}</span>
+            </div>
+          </div>
+          <span class="font-bold text-sm text-rose-600 dark:text-rose-400">-{{ l.valor|brl }}</span>
+        </div>
+        {% empty %}
+          <p class="text-xs text-slate-400 py-4 text-center">Nenhuma despesa no período.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <h3 class="font-bold text-base mb-4">Próximos Vencimentos</h3>
+      <div class="divide-y divide-slate-100 dark:divide-slate-700/50">
+        {% for c in vencimentos %}
+        <div class="py-3 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 flex items-center justify-center text-sm"><i class="fa-solid fa-file-invoice"></i></div>
+            <div>
+              <p class="text-sm font-semibold leading-tight">{{ c.descricao }}</p>
+              <span class="text-xs text-slate-400">Venc: {{ c.vencimento|date:"d/m/Y" }}</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="font-bold text-sm block">{{ c.valor|brl }}</span>
+            {% if c.status == "atrasada" %}
+              <span class="text-xs px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 font-medium">Atrasada</span>
+            {% else %}
+              <span class="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 font-medium">A vencer</span>
+            {% endif %}
+          </div>
+        </div>
+        {% empty %}
+          <p class="text-xs text-slate-400 py-4 text-center">Nenhuma conta pendente.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{{ graficos|json_script:"dados-graficos" }}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  var dados = JSON.parse(document.getElementById("dados-graficos").textContent);
+  var brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+  var num = new Intl.NumberFormat("pt-BR");
+  var graficos = [];
+
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.maintainAspectRatio = false;
+
+  function cores() {
+    var escuro = document.documentElement.classList.contains("dark");
+    return { texto: escuro ? "#cbd5e1" : "#475569", grade: escuro ? "#334155" : "#f1f5f9" };
+  }
+  var fmtEixo = function (v) { return num.format(v); };
+  var fmtTip = function (c) { return c.dataset.label + ": " + brl.format(c.parsed.y !== undefined && c.chart.options.indexAxis !== "y" ? c.parsed.y : c.parsed.x); };
+
+  function desenhar() {
+    graficos.forEach(function (g) { g.destroy(); });
+    graficos = [];
+    var c = cores();
+
+    // 1) Gastos por categoria (barras horizontais, clique = lista de lançamentos)
+    var elCat = document.getElementById("chartCategory");
+    if (elCat) {
+      graficos.push(new Chart(elCat, {
+        type: "bar",
+        data: {
+          labels: dados.categorias.map(function (x) { return x.nome; }),
+          datasets: [{ label: "Gasto", data: dados.categorias.map(function (x) { return x.total; }), backgroundColor: "#ef4444", borderRadius: 6 }]
+        },
+        options: {
+          indexAxis: "y",
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: fmtTip } } },
+          scales: {
+            x: { grid: { color: c.grade }, ticks: { color: c.texto, callback: fmtEixo } },
+            y: { grid: { display: false }, ticks: { color: c.texto, font: { weight: "500" } } }
+          },
+          onClick: function (e, itens) { if (itens.length) window.location = dados.categorias[itens[0].index].url; },
+          onHover: function (e, itens) { e.native.target.style.cursor = itens.length ? "pointer" : "default"; }
+        }
+      }));
+    }
+
+    // 2) Ritmo de gasto: acumulado do mês atual x mês anterior
+    graficos.push(new Chart(document.getElementById("chartPace"), {
+      type: "line",
+      data: {
+        labels: dados.ritmo.dias,
+        datasets: [
+          { label: dados.ritmo.rotulo_atual, data: dados.ritmo.atual, borderColor: "#22c55e", backgroundColor: "rgba(34, 197, 94, 0.1)", fill: true, tension: 0, borderWidth: 3, pointRadius: 0, spanGaps: false },
+          { label: dados.ritmo.rotulo_anterior, data: dados.ritmo.anterior, borderColor: "#94a3b8", borderDash: [5, 5], tension: 0, borderWidth: 2, pointRadius: 0 }
+        ]
+      },
+      options: {
+        interaction: { mode: "index", intersect: false },
+        plugins: { legend: { labels: { color: c.texto, usePointStyle: true, pointStyle: "line" } }, tooltip: { callbacks: { label: fmtTip } } },
+        scales: {
+          x: { grid: { color: c.grade }, ticks: { color: c.texto } },
+          y: { grid: { color: c.grade }, ticks: { color: c.texto, callback: fmtEixo } }
+        }
+      }
+    }));
+
+    // 3) Receitas x despesas nos últimos 12 meses, com linha de resultado
+    graficos.push(new Chart(document.getElementById("chartMonthly"), {
+      type: "bar",
+      data: {
+        labels: dados.evolucao.rotulos,
+        datasets: [
+          { label: "Receitas", data: dados.evolucao.receitas, backgroundColor: "#22c55e", borderRadius: 4 },
+          { label: "Despesas", data: dados.evolucao.despesas, backgroundColor: "#ef4444", borderRadius: 4 },
+          { label: "Resultado", data: dados.evolucao.resultado, type: "line", borderColor: "#3b82f6", backgroundColor: "#3b82f6", borderWidth: 2, tension: 0.2, pointRadius: 3 }
+        ]
+      },
+      options: {
+        interaction: { mode: "index", intersect: false },
+        plugins: { legend: { labels: { color: c.texto } }, tooltip: { callbacks: { label: fmtTip } } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: c.texto } },
+          y: { grid: { color: c.grade }, ticks: { color: c.texto, callback: fmtEixo } }
+        }
+      }
+    }));
+  }
+
+  desenhar();
+  window.addEventListener("tema-alterado", desenhar); // redesenha com as cores do novo tema
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% if v.pct is None %}
+  <div class="mt-2 flex items-center text-xs font-medium">
+    <span class="text-slate-500 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">sem base</span>
+    <span class="ml-1.5 text-slate-400">vs período anterior</span>
+  </div>
+{% else %}
+  <div class="mt-2 flex items-center text-xs font-medium">
+    {% if v.classe == "bom" %}
+      <span class="text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full">{{ v.sinal }} {{ v.pct|floatformat:1 }}%</span>
+    {% elif v.classe == "ruim" %}
+      <span class="text-rose-600 bg-rose-50 dark:bg-rose-950/50 px-2 py-0.5 rounded-full">{{ v.sinal }} {{ v.pct|floatformat:1 }}%</span>
+    {% else %}
+      <span class="text-slate-500 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">0,0%</span>
+    {% endif %}
+    <span class="ml-1.5 text-slate-400">vs período anterior</span>
+  </div>
+{% endif %}

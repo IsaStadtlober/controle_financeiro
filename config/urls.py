@@ -7,5 +7,6 @@ urlpatterns = [
     path("login/", auth_views.LoginView.as_view(), name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("lancamentos/", include("apps.lancamentos.urls")),
+    path("orcamento/", include("apps.orcamento.urls")),
     path("", include("apps.dashboard.urls")),
 ]
