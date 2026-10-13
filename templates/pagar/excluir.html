@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load formatos %}
+{% block title %}Excluir conta - FinançasPro{% endblock %}
+{% block h1 %}Excluir conta a pagar{% endblock %}
+
+{% block content %}
+<form method="post" class="max-w-lg mx-auto bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 space-y-4">
+  {% csrf_token %}
+  <div class="flex items-start space-x-3">
+    <div class="w-10 h-10 shrink-0 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 flex items-center justify-center"><i class="fa-solid fa-trash-can"></i></div>
+    <p class="text-sm">Excluir <strong>{{ conta.descricao }}</strong> de <strong>{{ conta.valor|brl }}</strong> (vence em {{ conta.vencimento|date:"d/m/Y" }})?<br>
+      <span class="text-slate-500 dark:text-slate-400">Essa ação não pode ser desfeita.</span></p>
+  </div>
+  <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-700/50">
+    <a href="{% url 'pagar:lista' %}" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">Cancelar</a>
+    <button type="submit" class="px-5 py-2 rounded-xl text-sm font-medium bg-rose-600 hover:bg-rose-700 text-white transition-colors">Excluir</button>
+  </div>
+</form>
+{% endblock %}

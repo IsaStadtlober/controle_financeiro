@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load formatos %}
+{% block title %}Registrar pagamento - FinançasPro{% endblock %}
+{% block h1 %}Registrar pagamento{% endblock %}
+
+{% block content %}
+<form method="post" class="max-w-lg mx-auto bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 space-y-4">
+  {% csrf_token %}
+  <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700/50">
+    <div>
+      <p class="font-semibold">{{ conta.descricao }}</p>
+      <span class="text-xs text-slate-400">Vence em {{ conta.vencimento|date:"d/m/Y" }} • {{ conta.categoria }}</span>
+    </div>
+    <span class="font-bold text-lg text-rose-600 dark:text-rose-400">{{ conta.valor|brl }}</span>
+  </div>
+
+  {% for campo in form %}
+    {% include "partials/campo.html" with campo=campo %}
+  {% endfor %}
+  <p class="text-xs text-slate-400">Ao confirmar, é criada uma despesa em Lançamentos e o saldo da conta diminui.</p>
+
+  <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-700/50">
+    <a href="{% url 'pagar:lista' %}" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">Cancelar</a>
+    <button type="submit" class="px-5 py-2 rounded-xl text-sm font-medium bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-500/20 transition-colors">Confirmar pagamento</button>
+  </div>
+</form>
+{% endblock %}

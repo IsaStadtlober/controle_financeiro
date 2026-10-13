@@ -40,8 +40,9 @@
          class="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors {% if request.resolver_match.app_name == 'orcamento' %}bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-400{% else %}text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50{% endif %}">
         <i class="fa-solid fa-bullseye w-5 text-center"></i><span>Orçamento</span>
       </a>
-      <a href="/admin/pagar/contapagar/" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-        <i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i><span class="flex-1">Contas a Pagar</span><em class="not-italic text-[10px] text-slate-400 border border-slate-200 dark:border-slate-600 rounded-full px-2">admin</em>
+      <a href="{% url 'pagar:lista' %}"
+         class="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors {% if request.resolver_match.app_name == 'pagar' %}bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-400{% else %}text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50{% endif %}">
+        <i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i><span>Contas a Pagar</span>
       </a>
       <a href="/admin/contas/conta/" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
         <i class="fa-solid fa-vault w-5 text-center"></i><span class="flex-1">Patrimônio</span><em class="not-italic text-[10px] text-slate-400 border border-slate-200 dark:border-slate-600 rounded-full px-2">admin</em>

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load formatos %}
+{% block title %}Recorrências - FinançasPro{% endblock %}
+{% block h1 %}Despesas Recorrentes{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <h3 class="font-bold text-lg">Despesas Recorrentes</h3>
+      <p class="text-sm text-slate-500 dark:text-slate-400">Contas fixas (aluguel, internet, plano de saúde...). Elas geram as contas a pagar de cada mês.</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="{% url 'pagar:lista' %}" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">← Contas a pagar</a>
+      <form method="post" action="{% url 'pagar:gerar' %}">
+        {% csrf_token %}
+        <button type="submit" class="px-4 py-2 rounded-xl text-sm font-medium bg-brand-50 text-brand-700 hover:bg-brand-100 dark:bg-brand-950/40 dark:text-brand-400 transition-colors" title="Cria as contas dos próximos 3 meses que ainda não existem">Gerar contas dos próximos meses</button>
+      </form>
+      <a href="{% url 'pagar:recorrencia_nova' %}" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 rounded-xl text-sm transition-colors flex items-center space-x-2 shadow-md shadow-brand-500/20">
+        <i class="fa-solid fa-plus"></i><span>Nova recorrência</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <th class="p-4">Descrição</th>
+            <th class="p-4">Categoria</th>
+            <th class="p-4">Valor</th>
+            <th class="p-4">Frequência</th>
+            <th class="p-4">Vence</th>
+            <th class="p-4">Situação</th>
+            <th class="p-4 text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50 text-sm">
+          {% for r in recorrencias %}
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+            <td class="p-4 font-semibold">{{ r.descricao }}</td>
+            <td class="p-4"><span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-medium">{{ r.categoria }}</span></td>
+            <td class="p-4 font-bold whitespace-nowrap">{{ r.valor|brl }}</td>
+            <td class="p-4 text-xs text-slate-500">{{ r.get_frequencia_display }}</td>
+            <td class="p-4 text-xs text-slate-500 whitespace-nowrap">{% if r.frequencia == "semanal" %}desde {{ r.inicio|date:"d/m/Y" }}{% else %}dia {{ r.dia_vencimento }}{% endif %}</td>
+            <td class="p-4 whitespace-nowrap">
+              {% if r.ativa %}<span class="text-xs px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 font-medium">Ativa</span>
+              {% else %}<span class="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 font-medium">Inativa</span>{% endif %}
+            </td>
+            <td class="p-4 text-center"><a href="{% url 'pagar:recorrencia_editar' r.pk %}" class="text-slate-400 hover:text-brand-600 transition-colors" title="Editar"><i class="fa-solid fa-pen"></i></a></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="p-6 text-center text-slate-400">Nenhuma recorrência cadastrada.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="text-xs text-slate-400">Para parar de gerar uma conta fixa, edite a recorrência e desmarque “Recorrência ativa”. As contas já geradas continuam na lista.</p>
+</div>
+{% endblock %}

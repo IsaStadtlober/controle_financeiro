@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load formatos %}
+{% block title %}Contas a pagar - FinançasPro{% endblock %}
+{% block h1 %}Contas a Pagar{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Cabeçalho e resumo -->
+  <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <h3 class="font-bold text-lg">Contas a Pagar & Boletos</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Acompanhe vencimentos e evite juros.</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="{% url 'pagar:recorrencias' %}" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"><i class="fa-solid fa-rotate mr-1"></i> Recorrências</a>
+        <a href="{% url 'pagar:nova' %}" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 rounded-xl text-sm transition-colors flex items-center space-x-2 shadow-md shadow-brand-500/20">
+          <i class="fa-solid fa-plus"></i><span>Adicionar Conta</span>
+        </a>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-100 dark:border-slate-700/50">
+      <div>
+        <span class="text-xs text-slate-400 block">Total em aberto</span>
+        <span class="font-bold text-lg">{{ resumo.aberto|default:0|brl }}</span>
+      </div>
+      <div>
+        <span class="text-xs text-slate-400 block">Atrasadas ({{ resumo.n_atrasadas }})</span>
+        <span class="font-bold text-lg {% if resumo.n_atrasadas %}text-rose-600 dark:text-rose-400{% endif %}">{{ resumo.atrasado|default:0|brl }}</span>
+      </div>
+      <div>
+        <span class="text-xs text-slate-400 block">Vencem nos próximos 7 dias</span>
+        <span class="font-bold text-lg {% if resumo.semana %}text-amber-600 dark:text-amber-400{% endif %}">{{ resumo.semana|default:0|brl }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Abas de status -->
+  <div class="flex flex-wrap gap-2">
+    {% for chave, rotulo in status_opcoes.items %}
+      <a href="?status={{ chave }}" class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors {% if chave == status %}bg-brand-600 text-white{% else %}bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700{% endif %}">{{ rotulo }}</a>
+    {% endfor %}
+  </div>
+
+  <!-- Tabela -->
+  <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <th class="p-4">Vencimento</th>
+            <th class="p-4">Descrição</th>
+            <th class="p-4">Categoria</th>
+            <th class="p-4">Valor</th>
+            <th class="p-4">Status</th>
+            <th class="p-4 text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50 text-sm">
+          {% for c in pagina %}
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+            <td class="p-4 text-xs font-medium text-slate-500 whitespace-nowrap">{{ c.vencimento|date:"d/m/Y" }}{% if c.recorrencia_id %} <i class="fa-solid fa-rotate text-xs text-brand-500 ml-1" title="Recorrente"></i>{% endif %}</td>
+            <td class="p-4 font-semibold">{{ c.descricao }}</td>
+            <td class="p-4"><span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-medium">{{ c.categoria }}</span></td>
+            <td class="p-4 font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">{{ c.valor|brl }}</td>
+            <td class="p-4 whitespace-nowrap">
+              {% if c.status == "paga" %}<span class="text-xs px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 font-medium">Paga em {{ c.pago_em|date:"d/m" }}</span>
+              {% elif c.status == "atrasada" %}<span class="text-xs px-2.5 py-1 rounded-full bg-rose-50 text-rose-600 font-medium">Atrasada</span>
+              {% else %}<span class="text-xs px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 font-medium">A vencer</span>{% endif %}
+            </td>
+            <td class="p-4 text-center whitespace-nowrap">
+              {% if c.pago_em %}
+                <form method="post" action="{% url 'pagar:desfazer' c.pk %}" class="inline" onsubmit="return confirm('Desfazer o pagamento? O lançamento criado será removido.')">
+                  {% csrf_token %}
+                  <button type="submit" class="text-xs text-slate-400 hover:text-rose-600 transition-colors">Desfazer</button>
+                </form>
+              {% else %}
+                <a href="{% url 'pagar:pagar' c.pk %}" class="px-3 py-1 bg-brand-50 dark:bg-brand-950/50 text-brand-600 hover:bg-brand-100 rounded-lg text-xs font-medium transition-colors">Marcar como paga</a>
+                <a href="{% url 'pagar:editar' c.pk %}" class="text-slate-400 hover:text-brand-600 transition-colors ml-3" title="Editar"><i class="fa-solid fa-pen"></i></a>
+                <a href="{% url 'pagar:excluir' c.pk %}" class="text-slate-400 hover:text-rose-600 transition-colors ml-2" title="Excluir"><i class="fa-solid fa-trash-can"></i></a>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="p-6 text-center text-slate-400">Nenhuma conta nesta lista.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <nav class="flex items-center justify-center gap-4 text-sm text-slate-500">
+    {% if pagina.has_previous %}<a class="px-3 py-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800" href="?status={{ status }}&pagina={{ pagina.previous_page_number }}">← Anterior</a>{% endif %}
+    <span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+    {% if pagina.has_next %}<a class="px-3 py-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800" href="?status={{ status }}&pagina={{ pagina.next_page_number }}">Próxima →</a>{% endif %}
+  </nav>
+</div>
+{% endblock %}

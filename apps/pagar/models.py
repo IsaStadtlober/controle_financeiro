@@ -86,3 +86,14 @@ class ContaPagar(models.Model):
         self.conta, self.lancamento, self.pago_em = conta, lanc, data
         self.save(update_fields=["conta", "lancamento", "pago_em"])
         return lanc
+    
+    @transaction.atomic
+    def desfazer_pagamento(self):
+        """Volta a conta para "em aberto" e apaga o lançamento que o pagamento criou."""
+        if not self.pago_em:
+            return
+        lancamento = self.lancamento
+        self.lancamento, self.pago_em = None, None
+        self.save(update_fields=["lancamento", "pago_em"])
+        if lancamento:
+            lancamento.delete()
