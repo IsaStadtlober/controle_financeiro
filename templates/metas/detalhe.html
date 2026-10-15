@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load formatos %}
+{% block title %}{{ i.meta.nome }} - FinançasPro{% endblock %}
+{% block h1 %}{{ i.meta.nome }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-3xl mx-auto">
+
+  <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+    <div class="flex items-center justify-between gap-3">
+      <div>
+        <span class="text-xs text-slate-400 block">Reservado</span>
+        <span class="text-3xl font-extrabold tracking-tight text-brand-600 dark:text-brand-400">{{ i.reservado|brl }}</span>
+        <span class="text-sm text-slate-400"> de {{ i.meta.valor_alvo|brl }}</span>
+      </div>
+      <span class="text-sm font-semibold px-3 py-1 rounded-full {% if i.concluida %}bg-emerald-50 text-emerald-600{% elif i.atrasada %}bg-rose-50 text-rose-600{% else %}bg-brand-50 text-brand-600 dark:bg-brand-950/40{% endif %}">
+        {% if i.concluida %}Atingida{% elif i.atrasada %}Prazo vencido{% else %}{{ i.pct|floatformat:0 }}%{% endif %}
+      </span>
+    </div>
+    <div class="w-full bg-slate-100 dark:bg-slate-700 h-3 rounded-full overflow-hidden">
+      <div class="h-full rounded-full {% if i.concluida %}bg-emerald-500{% else %}bg-brand-500{% endif %}" style="width: {{ i.pct|floatformat:'1u' }}%;"></div>
+    </div>
+    <div class="text-xs text-slate-400 space-y-1">
+      <p>{% if i.meta.prazo %}Prazo: {{ i.meta.prazo|date:"d/m/Y" }}{% else %}Sem prazo definido{% endif %}</p>
+      {% if not i.concluida %}<p>Faltam {{ i.faltam|brl }}{% if i.sugestao_mensal %} • sugestão: {{ i.sugestao_mensal|brl }} por mês{% endif %}</p>{% endif %}
+    </div>
+    <div class="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-700/50">
+      <a href="{% url 'metas:aporte' i.meta.pk %}" class="px-4 py-2 rounded-xl text-sm font-medium bg-brand-600 hover:bg-brand-700 text-white transition-colors shadow-md shadow-brand-500/20">Fazer aporte</a>
+      <a href="{% url 'metas:aporte' i.meta.pk %}?operacao=resgate" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">Resgatar</a>
+      <a href="{% url 'metas:editar' i.meta.pk %}" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">Editar</a>
+      <a href="{% url 'metas:excluir' i.meta.pk %}" class="px-4 py-2 rounded-xl text-sm font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors">Excluir</a>
+      <a href="{% url 'metas:lista' %}" class="ml-auto text-sm text-slate-500 hover:underline">← Todas as metas</a>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+    <h3 class="font-bold text-base p-6 pb-3">Histórico</h3>
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-slate-50 dark:bg-slate-900/50 border-y border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <th class="p-4">Data</th><th class="p-4">Tipo</th><th class="p-4 text-right">Valor</th><th class="p-4 text-center">Ações</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50 text-sm">
+        {% for a in aportes %}
+        <tr>
+          <td class="p-4 text-xs text-slate-500">{{ a.data|date:"d/m/Y" }}</td>
+          <td class="p-4">{% if a.valor >= 0 %}Aporte{% else %}Resgate{% endif %}</td>
+          <td class="p-4 text-right font-bold {% if a.valor >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">{% if a.valor >= 0 %}+ {% endif %}{{ a.valor|brl }}</td>
+          <td class="p-4 text-center">
+            <form method="post" action="{% url 'metas:aporte_excluir' i.meta.pk a.pk %}" class="inline" onsubmit="return confirm('Remover esta movimentação?')">
+              {% csrf_token %}
+              <button type="submit" class="text-slate-400 hover:text-rose-600 transition-colors" title="Remover"><i class="fa-solid fa-trash-can"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="p-6 text-center text-slate-400">Nenhuma movimentação ainda.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

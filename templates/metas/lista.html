@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load formatos %}
+{% block title %}Metas - FinançasPro{% endblock %}
+{% block h1 %}Metas Financeiras{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <h3 class="font-bold text-lg">Metas Financeiras</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Dinheiro reservado para seus objetivos de vida.</p>
+      </div>
+      <a href="{% url 'metas:nova' %}" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 rounded-xl text-sm transition-colors flex items-center justify-center space-x-2 shadow-md shadow-brand-500/20">
+        <i class="fa-solid fa-plus"></i><span>Nova Meta</span>
+      </a>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-100 dark:border-slate-700/50">
+      <div>
+        <span class="text-xs text-slate-400 block">Reservado nas metas</span>
+        <span class="font-bold text-lg text-brand-600 dark:text-brand-400">{{ totais.reservado|brl }}</span>
+      </div>
+      <div>
+        <span class="text-xs text-slate-400 block">Soma dos alvos</span>
+        <span class="font-bold text-lg">{{ totais.alvo|brl }}</span>
+      </div>
+      <div>
+        <span class="text-xs text-slate-400 block">Metas concluídas</span>
+        <span class="font-bold text-lg">{{ totais.concluidas }} de {{ totais.total }}</span>
+      </div>
+    </div>
+    <p class="text-xs text-slate-400">Uma meta apenas “carimba” uma parte do seu dinheiro: aportes e resgates aqui não alteram o saldo das contas.</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for i in itens %}
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4 flex flex-col">
+      <div class="flex items-start justify-between gap-3">
+        <h4 class="font-bold text-base leading-tight"><a href="{% url 'metas:detalhe' i.meta.pk %}" class="hover:underline">{{ i.meta.nome }}</a></h4>
+        {% if i.concluida %}<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 shrink-0"><i class="fa-solid fa-check mr-1"></i>Atingida</span>
+        {% elif i.atrasada %}<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-rose-50 text-rose-600 shrink-0">Prazo vencido</span>
+        {% else %}<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-brand-50 text-brand-600 dark:bg-brand-950/40 shrink-0">{{ i.pct|floatformat:0 }}% Concluído</span>{% endif %}
+      </div>
+
+      <div>
+        <div class="flex justify-between text-sm mb-1">
+          <span class="font-bold">{{ i.reservado|brl }}</span>
+          <span class="text-slate-400">Alvo: {{ i.meta.valor_alvo|brl }}</span>
+        </div>
+        <div class="w-full bg-slate-100 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
+          <div class="h-full rounded-full {% if i.concluida %}bg-emerald-500{% else %}bg-brand-500{% endif %}" style="width: {{ i.pct|floatformat:'1u' }}%;"></div>
+        </div>
+      </div>
+
+      <div class="text-xs text-slate-400 space-y-1 flex-1">
+        {% if i.concluida %}
+          <p>Parabéns! Você alcançou o valor alvo.</p>
+        {% else %}
+          <p>Faltam <strong class="text-slate-600 dark:text-slate-300">{{ i.faltam|brl }}</strong></p>
+          {% if i.sugestao_mensal %}<p>Para chegar no prazo: <strong class="text-slate-600 dark:text-slate-300">{{ i.sugestao_mensal|brl }}</strong> por mês ({{ i.meses }} {% if i.meses == 1 %}mês{% else %}meses{% endif %})</p>{% endif %}
+        {% endif %}
+      </div>
+
+      <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700/50 text-xs">
+        <span class="text-slate-400">{% if i.meta.prazo %}Prazo: {{ i.meta.prazo|date:"d/m/Y" }}{% else %}Sem prazo{% endif %}</span>
+        <a href="{% url 'metas:aporte' i.meta.pk %}" class="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl transition-colors shadow-sm">Fazer Aporte</a>
+      </div>
+    </div>
+    {% empty %}
+    <p class="text-sm text-slate-400 col-span-full text-center py-10">Nenhuma meta ainda. Clique em “Nova Meta” para criar a primeira.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
