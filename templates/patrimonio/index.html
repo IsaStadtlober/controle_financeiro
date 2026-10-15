@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% load formatos %}
+{% block title %}Patrimônio - FinançasPro{% endblock %}
+{% block h1 %}Patrimônio & Investimentos{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <span class="text-sm text-slate-500 dark:text-slate-400 font-medium">Patrimônio Total</span>
+      <h3 class="text-3xl font-extrabold mt-2 tracking-tight text-brand-600 dark:text-brand-400">{{ comp.total|brl }}</h3>
+      <span class="text-xs text-slate-400 mt-1 block">Contas + investimentos</span>
+    </div>
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <span class="text-sm text-slate-500 dark:text-slate-400 font-medium">Disponível</span>
+      <h3 class="text-3xl font-extrabold mt-2 tracking-tight">{{ comp.disponivel|brl }}</h3>
+      <span class="text-xs text-slate-400 mt-1 block">Corrente, poupança e carteira</span>
+    </div>
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <span class="text-sm text-slate-500 dark:text-slate-400 font-medium">Reserva de Emergência</span>
+      <h3 class="text-3xl font-extrabold mt-2 tracking-tight text-amber-600 dark:text-amber-400">{{ comp.reserva|brl }}</h3>
+      <span class="text-xs text-slate-400 mt-1 block">
+        {% if cobertura is not None %}Cobre {{ cobertura|floatformat:1 }} meses de despesas{% else %}Sem despesas para calcular a cobertura{% endif %}
+      </span>
+    </div>
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <span class="text-sm text-slate-500 dark:text-slate-400 font-medium">Investimentos</span>
+      <h3 class="text-3xl font-extrabold mt-2 tracking-tight text-blue-600 dark:text-blue-400">{{ comp.investimentos|brl }}</h3>
+      <span class="text-xs text-slate-400 mt-1 block">
+        {% if comp.rentabilidade is not None %}Posições: {% if comp.rentabilidade >= 0 %}+{% endif %}{{ comp.rentabilidade|floatformat:1 }}% sobre o aplicado{% else %}Nenhuma posição cadastrada{% endif %}
+      </span>
+    </div>
+  </div>
+
+  <!-- Evolução -->
+  <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+      <div>
+        <h3 class="font-bold text-base">Evolução do Patrimônio</h3>
+        <span class="text-xs text-slate-400">
+          {% if ultimo_registro %}Último registro: {{ ultimo_registro.mes|date:"m/Y" }}{% else %}Ainda sem registros{% endif %}
+        </span>
+      </div>
+      <form method="post" action="{% url 'patrimonio:registrar' %}">
+        {% csrf_token %}
+        <button type="submit" class="px-4 py-2 rounded-xl text-sm font-medium bg-brand-50 text-brand-700 hover:bg-brand-100 dark:bg-brand-950/40 dark:text-brand-400 transition-colors" title="Guarda os valores de hoje como o registro deste mês">
+          <i class="fa-solid fa-camera mr-1"></i> Registrar patrimônio de hoje
+        </button>
+      </form>
+    </div>
+    {% if historico.rotulos %}
+      <div class="relative" style="height: 300px"><canvas id="chartPatrimonio"></canvas></div>
+    {% else %}
+      <p class="text-sm text-slate-400 py-10 text-center">Clique em “Registrar patrimônio de hoje” para guardar o primeiro ponto do gráfico.<br>Repita uma vez por mês para acompanhar a evolução.</p>
+    {% endif %}
+  </div>
+
+  <!-- Contas e investimentos -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-base">Saldos por Conta</h3>
+        <a href="/admin/contas/conta/" class="text-xs text-brand-600 hover:underline">Gerenciar contas</a>
+      </div>
+      <div class="space-y-3">
+        {% for item in comp.por_conta %}
+        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700/50">
+          <div class="flex items-center space-x-3 min-w-0">
+            <div class="w-8 h-8 shrink-0 rounded-lg bg-brand-50 dark:bg-brand-950/40 text-brand-600 flex items-center justify-center text-sm"><i class="fa-solid fa-wallet"></i></div>
+            <div class="min-w-0">
+              <span class="font-medium text-sm block truncate">{{ item.conta.nome }}</span>
+              <span class="text-xs text-slate-400">{{ item.conta.get_tipo_display }}</span>
+            </div>
+          </div>
+          <span class="font-bold text-sm {% if item.saldo < 0 %}text-rose-600 dark:text-rose-400{% endif %}">{{ item.saldo|brl }}</span>
+        </div>
+        {% empty %}
+        <p class="text-xs text-slate-400 py-4 text-center">Nenhuma conta ativa.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-base">Portfólio de Investimentos</h3>
+        <a href="{% url 'patrimonio:investimento_novo' %}" class="text-sm font-medium text-brand-600 hover:underline"><i class="fa-solid fa-plus mr-1"></i>Novo</a>
+      </div>
+      <div class="space-y-3">
+        {% for inv in investimentos %}
+        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700/50 gap-3">
+          <div class="min-w-0">
+            <span class="font-semibold text-sm block truncate">{{ inv.nome }}</span>
+            <span class="text-xs text-slate-400">{{ inv.get_tipo_display }} • Aplicado: {{ inv.valor_aplicado|brl }} • {{ inv.atualizado_em|date:"d/m/Y" }}</span>
+          </div>
+          <div class="text-right shrink-0">
+            <span class="font-bold text-sm block">{{ inv.valor_atual|brl }}</span>
+            <span class="text-xs font-semibold {% if inv.rentabilidade >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">{% if inv.rentabilidade >= 0 %}+{% endif %}{{ inv.rentabilidade|floatformat:1 }}%</span>
+            <a href="{% url 'patrimonio:investimento_editar' inv.pk %}" class="text-slate-400 hover:text-brand-600 transition-colors ml-2" title="Atualizar valor"><i class="fa-solid fa-pen"></i></a>
+            <a href="{% url 'patrimonio:investimento_excluir' inv.pk %}" class="text-slate-400 hover:text-rose-600 transition-colors ml-1" title="Excluir"><i class="fa-solid fa-trash-can"></i></a>
+          </div>
+        </div>
+        {% empty %}
+        <p class="text-xs text-slate-400 py-4 text-center">Nenhum investimento cadastrado.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <p class="text-xs text-slate-400">
+    Como é calculado: o saldo de cada conta vem dos lançamentos. O patrimônio soma todas as contas ativas com o valor atual dos investimentos cadastrados.
+    Atenção: se o dinheiro de uma conta do tipo “Investimento” também estiver cadastrado como posição, ele é contado duas vezes. Mantenha na conta só o que ainda não virou posição.
+  </p>
+</div>
+
+{{ historico|json_script:"dados-patrimonio" }}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  var el = document.getElementById("chartPatrimonio");
+  if (!el) return;
+  var dados = JSON.parse(document.getElementById("dados-patrimonio").textContent);
+  var brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+  var num = new Intl.NumberFormat("pt-BR");
+  var grafico = null;
+
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.maintainAspectRatio = false;
+
+  function desenhar() {
+    if (grafico) grafico.destroy();
+    var escuro = document.documentElement.classList.contains("dark");
+    var texto = escuro ? "#cbd5e1" : "#475569";
+    var grade = escuro ? "#334155" : "#f1f5f9";
+    var ponto = dados.rotulos.length === 1 ? 5 : 3;
+
+    grafico = new Chart(el, {
+      type: "line",
+      data: {
+        labels: dados.rotulos,
+        datasets: [
+          { label: "Total", data: dados.total, borderColor: "#22c55e", backgroundColor: "rgba(34, 197, 94, 0.1)", fill: true, borderWidth: 3, tension: 0.25, pointRadius: ponto },
+          { label: "Disponível", data: dados.disponivel, borderColor: "#94a3b8", borderWidth: 1.5, tension: 0.25, pointRadius: 2 },
+          { label: "Reserva", data: dados.reserva, borderColor: "#f59e0b", borderWidth: 1.5, tension: 0.25, pointRadius: 2 },
+          { label: "Investimentos", data: dados.investimentos, borderColor: "#3b82f6", borderWidth: 1.5, tension: 0.25, pointRadius: 2 }
+        ]
+      },
+      options: {
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { labels: { color: texto, usePointStyle: true, pointStyle: "line" } },
+          tooltip: { callbacks: { label: function (c) { return c.dataset.label + ": " + brl.format(c.parsed.y); } } }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: texto } },
+          y: { grid: { color: grade }, ticks: { color: texto, callback: function (v) { return num.format(v); } } }
+        }
+      }
+    });
+  }
+  desenhar();
+  window.addEventListener("tema-alterado", desenhar);
+})();
+</script>
+{% endblock %}
