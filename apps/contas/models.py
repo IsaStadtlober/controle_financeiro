@@ -13,7 +13,8 @@ class Conta(models.Model):
         VALE_ALIMENTACAO = "vale_alimentacao", "Vale alimentação"
 
     # Tipos que contam como "dinheiro disponível" no dashboard.
-    TIPOS_DISPONIVEIS = (Tipo.CORRENTE, Tipo.POUPANCA, Tipo.CARTEIRA, Tipo.VALE_REFEICAO, Tipo.VALE_ALIMENTACAO)
+    TIPOS_DISPONIVEIS = (Tipo.CORRENTE, Tipo.POUPANCA, Tipo.CARTEIRA)
+    TIPOS_BENEFICIO = (Tipo.VALE_REFEICAO, Tipo.VALE_ALIMENTACAO)
 
     nome = models.CharField(max_length=80)
     tipo = models.CharField(max_length=20, choices=Tipo.choices)

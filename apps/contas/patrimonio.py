@@ -17,11 +17,11 @@ ZERO = Decimal("0")
 
 
 def composicao():
-    """Divide o patrimônio em três partes: disponível, reserva e investimentos."""
+    """Divide o patrimônio em grupos: disponível, reserva, benefícios (VR/VA) e investimentos."""
     contas = list(Conta.objects.filter(ativa=True))
     saldo_de = saldos(contas)
 
-    disponivel = reserva = caixa_investimento = ZERO
+    disponivel = reserva = caixa_investimento = beneficios = ZERO
     por_conta = []
     for conta in contas:
         saldo = saldo_de[conta.pk]
@@ -30,6 +30,8 @@ def composicao():
             reserva += saldo
         elif conta.tipo == Conta.Tipo.INVESTIMENTO:
             caixa_investimento += saldo
+        elif conta.tipo in Conta.TIPOS_BENEFICIO:
+            beneficios += saldo
         else:  # corrente, poupança, carteira
             disponivel += saldo
 
@@ -41,6 +43,7 @@ def composicao():
         "por_conta": por_conta,
         "disponivel": disponivel,
         "reserva": reserva,
+        "beneficios": beneficios,
         "investimentos": investimentos,
         "caixa_investimento": caixa_investimento,
         "posicoes_aplicado": aplicado,
