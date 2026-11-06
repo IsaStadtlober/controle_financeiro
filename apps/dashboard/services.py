@@ -54,8 +54,11 @@ def calcular_periodo(chave, hoje=None):
 
 
 def _base(conta_id=None):
-    """Lançamentos que contam como receita/despesa (sem transferências)."""
-    qs = Lancamento.objects.exclude(tipo=Lancamento.Tipo.TRANSFERENCIA)
+    """Lançamentos que contam como receita/despesa (sem transferências e sem VR/VA)."""
+    qs = (
+        Lancamento.objects.exclude(tipo=Lancamento.Tipo.TRANSFERENCIA)
+        .exclude(conta__tipo__in=Conta.TIPOS_BENEFICIO)
+    )
     return qs.filter(conta_id=conta_id) if conta_id else qs
 
 
