@@ -49,26 +49,26 @@
       <table class="w-full text-left border-collapse">
         <thead>
           <tr class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            <th class="p-4">Vencimento</th>
-            <th class="p-4">Descrição</th>
-            <th class="p-4">Categoria</th>
-            <th class="p-4">Valor</th>
-            <th class="p-4">Status</th>
+            <th class="p-4"><span>Vencimento</span></th>
+            <th class="p-4"><span>Descrição</span></th>
+            <th class="p-4"><span>Categoria</span></th>
+            <th class="p-4"><span>Valor</span></th>
+            <th class="p-4"><span>Status</span></th>
             <th class="p-4 text-center">Ações</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50 text-sm">
           {% for c in pagina %}
           <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-            <td class="p-4 text-xs font-medium text-slate-500 whitespace-nowrap">{{ c.vencimento|date:"d/m/Y" }}{% if c.recorrencia_id %} <i class="fa-solid fa-rotate text-xs text-brand-500 ml-1" title="Recorrente"></i>{% endif %}</td>
-            <td class="p-4 font-semibold">{{ c.descricao }}</td>
-            <td class="p-4"><span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-medium">{{ c.categoria }}</span></td>
-            <td class="p-4 font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">{{ c.valor|brl }}</td>
-            <td class="p-4 whitespace-nowrap">
+            <td class="p-4 text-xs font-medium text-slate-500 whitespace-nowrap"><span class="cel inline-block">{{ c.vencimento|date:"d/m/Y" }}{% if c.recorrencia_id %} <i class="fa-solid fa-rotate text-xs text-brand-500 ml-1" title="Recorrente"></i>{% endif %}</span></td>
+            <td class="p-4 font-semibold"><span class="cel inline-block">{{ c.descricao }}</span></td>
+            <td class="p-4"><span class="cel inline-block"><span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-medium">{{ c.categoria }}</span></span></td>
+            <td class="p-4 font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap"><span class="cel inline-block">{{ c.valor|brl }}</span></td>
+            <td class="p-4 whitespace-nowrap"><span class="cel inline-block">
               {% if c.status == "paga" %}<span class="text-xs px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 font-medium">Paga em {{ c.pago_em|date:"d/m" }}</span>
               {% elif c.status == "atrasada" %}<span class="text-xs px-2.5 py-1 rounded-full bg-rose-50 text-rose-600 font-medium">Atrasada</span>
               {% else %}<span class="text-xs px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 font-medium">A vencer</span>{% endif %}
-            </td>
+            </span></td>
             <td class="p-4 text-center whitespace-nowrap">
               <div class="inline-flex items-center gap-2">
               {% if c.pago_em %}
@@ -113,4 +113,26 @@
     {% if pagina.has_next %}<a class="px-3 py-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800" href="?status={{ status }}&pagina={{ pagina.next_page_number }}">Próxima →</a>{% endif %}
   </nav>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Centraliza o conteúdo de cada coluna embaixo do texto do título (os títulos não se mexem).
+  function alinharColunas() {
+    document.querySelectorAll("table thead th span").forEach(function (titulo) {
+      var coluna = titulo.parentElement.cellIndex;
+      var larguraTitulo = titulo.getBoundingClientRect().width;
+      document.querySelectorAll("table tbody tr").forEach(function (linha) {
+        var celula = linha.cells[coluna] && linha.cells[coluna].querySelector(".cel");
+        if (!celula) return;
+        celula.style.marginLeft = "0px";
+        var sobra = (larguraTitulo - celula.getBoundingClientRect().width) / 2;
+        celula.style.marginLeft = Math.max(sobra, -40) + "px";
+      });
+    });
+  }
+  window.addEventListener("load", alinharColunas);
+  window.addEventListener("resize", alinharColunas);
+  if (document.fonts) document.fonts.ready.then(alinharColunas);
+</script>
 {% endblock %}
