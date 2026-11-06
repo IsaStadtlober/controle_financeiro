@@ -11,7 +11,7 @@ from django.db.models.functions import TruncMonth
 
 from apps.contas.models import Conta
 from apps.contas.services import saldo_disponivel, saldos
-from apps.lancamentos.models import Lancamento
+from apps.lancamentos.models import Lancamento, cor_padrao
 from apps.orcamento.models import Orcamento
 from apps.pagar.models import ContaPagar
 
@@ -108,12 +108,17 @@ def gastos_por_categoria(ini, fim, conta_id=None):
     qs = (
         _base(conta_id)
         .filter(tipo=Lancamento.Tipo.DESPESA, data__gte=ini, data__lt=fim)
-        .values("categoria_id", "categoria__nome")
+        .values("categoria_id", "categoria__nome", "categoria__cor")
         .annotate(total=Sum("valor"))
         .order_by("-total")
     )
     return [
-        {"id": r["categoria_id"], "nome": r["categoria__nome"], "total": float(r["total"])}
+        {
+            "id": r["categoria_id"],
+            "nome": r["categoria__nome"],
+            "total": float(r["total"]),
+            "cor": r["categoria__cor"] or cor_padrao(r["categoria_id"]),
+        }
         for r in qs
     ]
 

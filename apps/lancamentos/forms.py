@@ -1,8 +1,11 @@
+import re
+
 from django import forms
+from django.core.exceptions import ValidationError
 
 from apps.contas.models import Conta
 
-from .models import Categoria, Lancamento
+from .models import Categoria, Lancamento, proxima_cor
 
 # <input type="date"> envia a data em ISO (aaaa-mm-dd); o locale pt-br esperaria dd/mm/aaaa.
 FORMATOS_DATA = ["%Y-%m-%d", "%d/%m/%Y"]
@@ -75,10 +78,12 @@ class FiltroLancamentos(forms.Form):
         estilizar(self)
         self.fields["q"].widget.attrs["class"] += " pl-9"  # espaço para o ícone da lupa
 
+
 class CategoriaForm(forms.ModelForm):
     class Meta:
         model = Categoria
-        fields = ["nome", "tipo", "icone"]
+        fields = ["nome", "tipo", "icone", "cor"]
+        widgets = {"cor": forms.TextInput(attrs={"type": "color"})}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -86,6 +91,11 @@ class CategoriaForm(forms.ModelForm):
         self.fields["icone"].widget.attrs["placeholder"] = "Ex: fa-paw"
         self.fields["icone"].help_text = "Nome do ícone do Font Awesome (fontawesome.com/icons). Pode deixar em branco."
         estilizar(self)
+        self.fields["cor"].widget.attrs["class"] = (
+            "h-10 w-20 p-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent cursor-pointer"
+        )
+        # O seletor já abre na cor da categoria; se for nova, numa cor que ainda não está em uso.
+        self.initial["cor"] = self.instance.cor_exibicao if self.instance.pk else proxima_cor()
 
     def clean_icone(self):
         # Aceita "paw", "fa-paw" ou "fa-solid fa-paw" e guarda sempre no formato "fa-paw".
@@ -94,3 +104,9 @@ class CategoriaForm(forms.ModelForm):
             return ""
         nome = valor.split()[-1]
         return nome if nome.startswith("fa-") else f"fa-{nome}"
+
+    def clean_cor(self):
+        cor = self.cleaned_data.get("cor", "").strip()
+        if cor and not re.fullmatch(r"#[0-9a-fA-F]{6}", cor):
+            raise ValidationError("Use uma cor no formato #RRGGBB.")
+        return cor

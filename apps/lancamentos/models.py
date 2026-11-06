@@ -5,6 +5,17 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 
+# Paleta de cores automáticas para as categorias.
+PALETA_CATEGORIAS = [
+    "#ef4444", "#f97316", "#f59e0b", "#84cc16", "#22c55e", "#14b8a6",
+    "#06b6d4", "#3b82f6", "#6366f1", "#8b5cf6", "#d946ef", "#ec4899",
+]
+
+
+def cor_padrao(pk):
+    """Cor automática (pela paleta) para uma categoria sem cor escolhida."""
+    return PALETA_CATEGORIAS[(pk or 0) % len(PALETA_CATEGORIAS)]
+
 
 class Categoria(models.Model):
     class Tipo(models.TextChoices):
@@ -19,6 +30,7 @@ class Categoria(models.Model):
     icone = models.CharField(
         "ícone", max_length=40, blank=True, help_text="Classe do Font Awesome. Ex.: fa-house"
     )
+    cor = models.CharField(max_length=7, blank=True, help_text="Cor no formato #RRGGBB.")
 
     class Meta:
         ordering = ["tipo", "nome"]
@@ -28,6 +40,20 @@ class Categoria(models.Model):
 
     def __str__(self):
         return self.nome
+
+    @property
+    def cor_exibicao(self):
+        return self.cor or cor_padrao(self.pk)
+
+
+def proxima_cor():
+    """Primeira cor da paleta que nenhuma categoria usa ainda.
+    Se todas já estiverem em uso, reaproveita a paleta em ordem."""
+    usadas = set(Categoria.objects.exclude(cor="").values_list("cor", flat=True))
+    for cor in PALETA_CATEGORIAS:
+        if cor not in usadas:
+            return cor
+    return PALETA_CATEGORIAS[Categoria.objects.count() % len(PALETA_CATEGORIAS)]
 
 
 class Lancamento(models.Model):

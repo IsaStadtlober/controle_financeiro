@@ -19,7 +19,7 @@
       <ul class="divide-y divide-slate-100 dark:divide-slate-700/50 text-sm">
         {% for c in despesas %}
         <li class="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-          <i class="fa-solid {{ c.icone|default:'fa-tag' }} w-5 text-center text-slate-400"></i>
+          <span class="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center text-sm" style="background-color: {{ c.cor_exibicao }}22; color: {{ c.cor_exibicao }}"><i class="fa-solid {{ c.icone|default:'fa-tag' }}"></i></span>
           <span class="flex-1 font-semibold">{{ c.nome }}</span>
           <span class="text-xs text-slate-400">{{ c.qtd }} lançamento{{ c.qtd|pluralize }}</span>
           <a href="{% url 'lancamentos:categoria_editar' c.pk %}" class="text-slate-400 hover:text-brand-600 transition-colors" title="Editar"><i class="fa-solid fa-pen"></i></a>
@@ -37,7 +37,7 @@
       <ul class="divide-y divide-slate-100 dark:divide-slate-700/50 text-sm">
         {% for c in receitas %}
         <li class="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-          <i class="fa-solid {{ c.icone|default:'fa-tag' }} w-5 text-center text-slate-400"></i>
+          <span class="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center text-sm" style="background-color: {{ c.cor_exibicao }}22; color: {{ c.cor_exibicao }}"><i class="fa-solid {{ c.icone|default:'fa-tag' }}"></i></span>
           <span class="flex-1 font-semibold">{{ c.nome }}</span>
           <span class="text-xs text-slate-400">{{ c.qtd }} lançamento{{ c.qtd|pluralize }}</span>
           <a href="{% url 'lancamentos:categoria_editar' c.pk %}" class="text-slate-400 hover:text-brand-600 transition-colors" title="Editar"><i class="fa-solid fa-pen"></i></a>

@@ -59,9 +59,11 @@
             <td class="p-4 text-xs font-medium text-slate-500">{{ l.data|date:"d/m/Y" }}</td>
             <td class="p-4 font-semibold">{{ l.descricao|default:"-" }}</td>
             <td class="p-4">
-              <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-medium">
-                {% if l.tipo == "transferencia" %}Transferência{% else %}{{ l.categoria }}{% endif %}
-              </span>
+              {% if l.tipo == "transferencia" %}
+                <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-medium">Transferência</span>
+              {% else %}
+                <span class="px-2.5 py-1 rounded-lg text-xs font-semibold" style="background-color: {{ l.categoria.cor_exibicao }}22; color: {{ l.categoria.cor_exibicao }}">{{ l.categoria }}</span>
+              {% endif %}
             </td>
             <td class="p-4 text-xs text-slate-500">{{ l.conta }}{% if l.conta_destino %} ➔ {{ l.conta_destino }}{% endif %}</td>
             <td class="p-4 text-right font-bold {% if l.tipo == 'receita' %}text-emerald-600 dark:text-emerald-400{% elif l.tipo == 'despesa' %}text-rose-600 dark:text-rose-400{% else %}text-blue-600 dark:text-blue-400{% endif %}">
