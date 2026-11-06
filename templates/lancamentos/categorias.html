@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Categorias - FinançasPro{% endblock %}
+{% block h1 %}Categorias{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <a href="{% url 'lancamentos:lista' %}" class="text-sm text-slate-500 hover:underline"><i class="fa-solid fa-arrow-left mr-1"></i>Voltar aos lançamentos</a>
+    <a href="{% url 'lancamentos:categoria_nova' %}" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 rounded-xl text-sm transition-colors flex items-center space-x-2 shadow-md shadow-brand-500/20">
+      <i class="fa-solid fa-plus"></i><span>Nova categoria</span>
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <!-- Despesas -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-700/50 font-bold text-rose-600 dark:text-rose-400">Despesas</div>
+      <ul class="divide-y divide-slate-100 dark:divide-slate-700/50 text-sm">
+        {% for c in despesas %}
+        <li class="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+          <i class="fa-solid {{ c.icone|default:'fa-tag' }} w-5 text-center text-slate-400"></i>
+          <span class="flex-1 font-semibold">{{ c.nome }}</span>
+          <span class="text-xs text-slate-400">{{ c.qtd }} lançamento{{ c.qtd|pluralize }}</span>
+          <a href="{% url 'lancamentos:categoria_editar' c.pk %}" class="text-slate-400 hover:text-brand-600 transition-colors" title="Editar"><i class="fa-solid fa-pen"></i></a>
+          <a href="{% url 'lancamentos:categoria_excluir' c.pk %}" class="text-slate-400 hover:text-rose-600 transition-colors" title="Excluir"><i class="fa-solid fa-trash-can"></i></a>
+        </li>
+        {% empty %}
+        <li class="px-5 py-6 text-center text-slate-400">Nenhuma categoria de despesa.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- Receitas -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-700/50 font-bold text-emerald-600 dark:text-emerald-400">Receitas</div>
+      <ul class="divide-y divide-slate-100 dark:divide-slate-700/50 text-sm">
+        {% for c in receitas %}
+        <li class="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+          <i class="fa-solid {{ c.icone|default:'fa-tag' }} w-5 text-center text-slate-400"></i>
+          <span class="flex-1 font-semibold">{{ c.nome }}</span>
+          <span class="text-xs text-slate-400">{{ c.qtd }} lançamento{{ c.qtd|pluralize }}</span>
+          <a href="{% url 'lancamentos:categoria_editar' c.pk %}" class="text-slate-400 hover:text-brand-600 transition-colors" title="Editar"><i class="fa-solid fa-pen"></i></a>
+          <a href="{% url 'lancamentos:categoria_excluir' c.pk %}" class="text-slate-400 hover:text-rose-600 transition-colors" title="Excluir"><i class="fa-solid fa-trash-can"></i></a>
+        </li>
+        {% empty %}
+        <li class="px-5 py-6 text-center text-slate-400">Nenhuma categoria de receita.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

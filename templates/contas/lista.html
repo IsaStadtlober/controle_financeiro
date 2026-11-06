@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load formatos %}
+{% block title %}Contas - FinançasPro{% endblock %}
+{% block h1 %}Contas{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-3xl mx-auto">
+  <div class="flex items-center justify-end">
+    <a href="{% url 'contas:nova' %}" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 rounded-xl text-sm transition-colors flex items-center space-x-2 shadow-md shadow-brand-500/20">
+      <i class="fa-solid fa-plus"></i><span>Nova conta</span>
+    </a>
+  </div>
+
+  <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+    <ul class="divide-y divide-slate-100 dark:divide-slate-700/50 text-sm">
+      {% for c in contas %}
+      <li class="flex items-center gap-3 px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors {% if not c.ativa %}opacity-60{% endif %}">
+        <div class="w-9 h-9 shrink-0 rounded-lg bg-brand-50 dark:bg-brand-950/40 text-brand-600 flex items-center justify-center"><i class="fa-solid fa-wallet"></i></div>
+        <div class="flex-1 min-w-0">
+          <span class="font-semibold block truncate">{{ c.nome }}{% if not c.ativa %} <em class="not-italic text-[10px] text-slate-400 border border-slate-300 dark:border-slate-600 rounded-full px-2 ml-1">inativa</em>{% endif %}</span>
+          <span class="text-xs text-slate-400">{{ c.get_tipo_display }}</span>
+        </div>
+        <span class="font-bold {% if c.saldo_atual < 0 %}text-rose-600 dark:text-rose-400{% endif %}">{{ c.saldo_atual|brl }}</span>
+        <a href="{% url 'contas:editar' c.pk %}" class="text-slate-400 hover:text-brand-600 transition-colors" title="Editar"><i class="fa-solid fa-pen"></i></a>
+        <a href="{% url 'contas:excluir' c.pk %}" class="text-slate-400 hover:text-rose-600 transition-colors" title="Excluir"><i class="fa-solid fa-trash-can"></i></a>
+      </li>
+      {% empty %}
+      <li class="px-5 py-8 text-center text-slate-400">Nenhuma conta cadastrada. Clique em “Nova conta” para começar.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

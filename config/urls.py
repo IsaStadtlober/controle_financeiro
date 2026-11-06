@@ -10,6 +10,7 @@ urlpatterns = [
     path("orcamento/", include("apps.orcamento.urls")),
     path("pagar/", include("apps.pagar.urls")),
     path("patrimonio/", include("apps.contas.urls")),
+    path("contas/", include("apps.contas.urls_contas")),
     path("metas/", include("apps.metas.urls")),
     path("", include("apps.dashboard.urls")),
 ]

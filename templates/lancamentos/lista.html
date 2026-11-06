@@ -16,9 +16,14 @@
         <div class="w-44">{{ filtro.tipo }}</div>
         <div class="w-56">{{ filtro.categoria }}</div>
       </div>
-      <a href="{% url 'lancamentos:novo' %}" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 rounded-xl text-sm transition-colors flex items-center justify-center space-x-2 shadow-md shadow-brand-500/20 shrink-0">
-        <i class="fa-solid fa-plus"></i><span>Novo Lançamento</span>
-      </a>
+      <div class="flex items-center gap-2 shrink-0">
+        <a href="{% url 'lancamentos:categorias' %}" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors flex items-center space-x-2">
+          <i class="fa-solid fa-tags"></i><span>Categorias</span>
+        </a>
+        <a href="{% url 'lancamentos:novo' %}" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 rounded-xl text-sm transition-colors flex items-center justify-center space-x-2 shadow-md shadow-brand-500/20">
+          <i class="fa-solid fa-plus"></i><span>Novo Lançamento</span>
+        </a>
+      </div>
     </div>
     <div class="flex flex-wrap items-center gap-3">
       <div class="w-48">{{ filtro.conta }}</div>

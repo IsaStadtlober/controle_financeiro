@@ -74,3 +74,23 @@ class FiltroLancamentos(forms.Form):
         super().__init__(*args, **kwargs)
         estilizar(self)
         self.fields["q"].widget.attrs["class"] += " pl-9"  # espaço para o ícone da lupa
+
+class CategoriaForm(forms.ModelForm):
+    class Meta:
+        model = Categoria
+        fields = ["nome", "tipo", "icone"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["nome"].widget.attrs["placeholder"] = "Ex: Pets"
+        self.fields["icone"].widget.attrs["placeholder"] = "Ex: fa-paw"
+        self.fields["icone"].help_text = "Nome do ícone do Font Awesome (fontawesome.com/icons). Pode deixar em branco."
+        estilizar(self)
+
+    def clean_icone(self):
+        # Aceita "paw", "fa-paw" ou "fa-solid fa-paw" e guarda sempre no formato "fa-paw".
+        valor = self.cleaned_data.get("icone", "").strip()
+        if not valor:
+            return ""
+        nome = valor.split()[-1]
+        return nome if nome.startswith("fa-") else f"fa-{nome}"

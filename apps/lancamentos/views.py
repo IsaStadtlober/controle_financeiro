@@ -1,10 +1,10 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q, Sum
 from django.shortcuts import get_object_or_404, redirect, render
+from django.db.models import Count, ProtectedError, Q, Sum
 
-from .forms import FiltroLancamentos, LancamentoForm
+from .forms import CategoriaForm, FiltroLancamentos, LancamentoForm
 from .models import Categoria, Lancamento
 
 
@@ -90,3 +90,60 @@ def excluir(request, pk):
         messages.success(request, "Lançamento excluído.")
         return redirect("lancamentos:lista")
     return render(request, "lancamentos/excluir.html", {"obj": obj})
+
+@login_required
+def categorias(request):
+    # Quantos lançamentos cada categoria tem: {id_da_categoria: quantidade}
+    uso = dict(Lancamento.objects.values_list("categoria").annotate(n=Count("id")))
+
+    def com_uso(tipo):
+        lista = list(Categoria.objects.filter(tipo=tipo))
+        for c in lista:
+            c.qtd = uso.get(c.pk, 0)
+        return lista
+
+    return render(
+        request,
+        "lancamentos/categorias.html",
+        {"despesas": com_uso("despesa"), "receitas": com_uso("receita")},
+    )
+
+
+@login_required
+def categoria_nova(request):
+    form = CategoriaForm(request.POST or None, initial={"tipo": request.GET.get("tipo", "despesa")})
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Categoria criada.")
+        return redirect("lancamentos:categorias")
+    return render(request, "lancamentos/categoria_form.html", {"form": form, "titulo": "Nova categoria"})
+
+
+@login_required
+def categoria_editar(request, pk):
+    obj = get_object_or_404(Categoria, pk=pk)
+    form = CategoriaForm(request.POST or None, instance=obj)
+    # O tipo não muda depois de criada: senão os lançamentos antigos ficariam inconsistentes.
+    form.fields["tipo"].disabled = True
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Categoria atualizada.")
+        return redirect("lancamentos:categorias")
+    return render(request, "lancamentos/categoria_form.html", {"form": form, "titulo": "Editar categoria"})
+
+
+@login_required
+def categoria_excluir(request, pk):
+    obj = get_object_or_404(Categoria, pk=pk)
+    if request.method == "POST":
+        try:
+            obj.delete()
+            messages.success(request, "Categoria excluída.")
+        except ProtectedError:
+            messages.error(
+                request,
+                f'Não dá para excluir "{obj.nome}": ela ainda é usada em lançamentos, orçamentos ou outros '
+                "registros. Troque a categoria nesses itens ou apenas renomeie esta.",
+            )
+        return redirect("lancamentos:categorias")
+    return render(request, "lancamentos/categoria_excluir.html", {"obj": obj})
