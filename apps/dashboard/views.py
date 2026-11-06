@@ -48,7 +48,6 @@ def dashboard(request):
             "categorias": categorias,
             "ritmo": services.ritmo_de_gasto(hoje, conta_id),
             "evolucao": services.evolucao_mensal(hoje, conta_id),
-            "vales": services.vales_para_grafico(vales),
         },
     }
     return render(request, "dashboard/index.html", contexto)
