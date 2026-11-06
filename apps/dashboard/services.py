@@ -10,7 +10,7 @@ from django.db.models import Q, Sum
 from django.db.models.functions import TruncMonth
 
 from apps.contas.models import Conta
-from apps.contas.services import saldo_disponivel
+from apps.contas.services import saldo_disponivel, saldos
 from apps.lancamentos.models import Lancamento
 from apps.orcamento.models import Orcamento
 from apps.pagar.models import ContaPagar
@@ -231,3 +231,44 @@ def proximos_vencimentos(n=5):
         .select_related("categoria")
         .order_by("vencimento")[:n]
     )
+
+def vales(ini, fim):
+    """Saldo e movimento de cada vale (VR/VA) no período. Transferências não contam."""
+    contas = list(Conta.objects.filter(ativa=True, tipo__in=Conta.TIPOS_BENEFICIO))
+    if not contas:
+        return []
+    saldo_de = saldos(contas)
+    movimento = {
+        (r["conta_id"], r["tipo"]): r["t"]
+        for r in Lancamento.objects.filter(conta__in=contas, data__gte=ini, data__lt=fim)
+        .exclude(tipo=Lancamento.Tipo.TRANSFERENCIA)
+        .values("conta_id", "tipo")
+        .annotate(t=Sum("valor"))
+    }
+    itens = []
+    for c in contas:
+        recebido = movimento.get((c.pk, Lancamento.Tipo.RECEITA), ZERO)
+        gasto = movimento.get((c.pk, Lancamento.Tipo.DESPESA), ZERO)
+        saldo = saldo_de[c.pk]
+        # "Disponível no período" = o que sobrou + o que já foi gasto.
+        disponivel = saldo + gasto
+        pct = float(gasto / disponivel * 100) if disponivel > 0 else 0.0
+        itens.append({
+            "nome": c.nome,
+            "tipo": c.get_tipo_display(),
+            "saldo": saldo,
+            "recebido": recebido,
+            "gasto": gasto,
+            "pct": pct,
+            "pct_barra": min(pct, 100),
+        })
+    return itens
+
+
+def vales_para_grafico(itens):
+    return {
+        "rotulos": [v["nome"] for v in itens],
+        "recebido": [float(v["recebido"]) for v in itens],
+        "gasto": [float(v["gasto"]) for v in itens],
+        "saldo": [float(v["saldo"]) for v in itens],
+    }

@@ -29,6 +29,8 @@ def dashboard(request):
             f"&de={ini.isoformat()}&ate={ultimo_dia.isoformat()}"
         )
 
+    vales = services.vales(ini, fim)
+
     contexto = {
         "periodos": services.PERIODOS,
         "periodo": chave,
@@ -36,6 +38,7 @@ def dashboard(request):
         "conta_id": conta_id,
         "periodo_rotulo": f"{ini:%d/%m/%Y} a {ultimo_dia:%d/%m/%Y}",
         "cards": services.cards(ini, fim, ant_ini, ant_fim, conta_id),
+        "vales": vales,
         "orcamento": services.orcamento_vs_realizado(ultimo_dia),
         "mes_orcamento": ultimo_dia,
         "maiores": services.maiores_despesas(ini, fim, conta_id),
@@ -45,6 +48,7 @@ def dashboard(request):
             "categorias": categorias,
             "ritmo": services.ritmo_de_gasto(hoje, conta_id),
             "evolucao": services.evolucao_mensal(hoje, conta_id),
+            "vales": services.vales_para_grafico(vales),
         },
     }
     return render(request, "dashboard/index.html", contexto)

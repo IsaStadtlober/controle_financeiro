@@ -70,6 +70,49 @@
     </div>
   </div>
 
+  <!-- Vale refeição e alimentação -->
+  {% if vales %}
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-base">Vale Refeição e Alimentação</h3>
+        <span class="text-xs text-slate-400">Movimento do período</span>
+      </div>
+      <div class="space-y-4">
+        {% for v in vales %}
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700/50 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-xl bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 flex items-center justify-center text-sm"><i class="fa-solid fa-utensils"></i></div>
+              <div>
+                <p class="text-sm font-semibold leading-tight">{{ v.nome }}</p>
+                <span class="text-xs text-slate-400">{{ v.tipo }}</span>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-xs text-slate-400 block">Saldo</span>
+              <span class="font-bold text-lg {% if v.saldo < 0 %}text-rose-600 dark:text-rose-400{% endif %}">{{ v.saldo|brl }}</span>
+            </div>
+          </div>
+          <div class="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+            <div class="h-full rounded-full {% if v.pct >= 90 %}bg-rose-500{% elif v.pct >= 70 %}bg-amber-500{% else %}bg-brand-500{% endif %}" style="width: {{ v.pct_barra|floatformat:'1u' }}%;"></div>
+          </div>
+          <div class="flex justify-between text-xs text-slate-500 dark:text-slate-400">
+            <span>Recebido: <strong class="text-emerald-600 dark:text-emerald-400">{{ v.recebido|brl }}</strong></span>
+            <span>Gasto: <strong class="text-rose-600 dark:text-rose-400">{{ v.gasto|brl }}</strong> ({{ v.pct|floatformat:0 }}%)</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
+      <h3 class="font-bold text-base mb-4">Recebido x Gasto x Saldo</h3>
+      <div class="relative" style="height: 280px"><canvas id="chartVales"></canvas></div>
+    </div>
+  </div>
+  {% endif %}
+
   <!-- Gastos por categoria + ritmo de gasto -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
@@ -117,7 +160,7 @@
           </div>
         </div>
         {% empty %}
-          <a href="{% url 'orcamento:lista' %}" class="text-brand-600 hover:underline">Definir limites</a>
+          <p class="text-xs text-slate-400 py-6 text-center">Nenhum limite definido para este mês.<br><a href="{% url 'orcamento:lista' %}" class="text-brand-600 hover:underline">Definir limites</a></p>
         {% endfor %}
       </div>
     </div>
@@ -219,6 +262,30 @@
           },
           onClick: function (e, itens) { if (itens.length) window.location = dados.categorias[itens[0].index].url; },
           onHover: function (e, itens) { e.native.target.style.cursor = itens.length ? "pointer" : "default"; }
+        }
+      }));
+    }
+
+    // 4) Vale refeição e alimentação: recebido x gasto x saldo
+    var elVales = document.getElementById("chartVales");
+    if (elVales) {
+      graficos.push(new Chart(elVales, {
+        type: "bar",
+        data: {
+          labels: dados.vales.rotulos,
+          datasets: [
+            { label: "Recebido", data: dados.vales.recebido, backgroundColor: "#22c55e", borderRadius: 6 },
+            { label: "Gasto", data: dados.vales.gasto, backgroundColor: "#ef4444", borderRadius: 6 },
+            { label: "Saldo atual", data: dados.vales.saldo, backgroundColor: "#3b82f6", borderRadius: 6 }
+          ]
+        },
+        options: {
+          interaction: { mode: "index", intersect: false },
+          plugins: { legend: { labels: { color: c.texto } }, tooltip: { callbacks: { label: fmtTip } } },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: c.texto } },
+            y: { grid: { color: c.grade }, ticks: { color: c.texto, callback: fmtEixo } }
+          }
         }
       }));
     }
