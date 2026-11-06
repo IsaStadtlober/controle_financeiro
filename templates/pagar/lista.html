@@ -70,16 +70,33 @@
               {% else %}<span class="text-xs px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 font-medium">A vencer</span>{% endif %}
             </td>
             <td class="p-4 text-center whitespace-nowrap">
+              <div class="inline-flex items-center gap-2">
               {% if c.pago_em %}
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-emerald-500 text-white text-lg shadow-sm shadow-emerald-500/30" title="Paga">
+                  <i class="fa-solid fa-check"></i>
+                </span>
                 <form method="post" action="{% url 'pagar:desfazer' c.pk %}" class="inline" onsubmit="return confirm('Desfazer o pagamento? O lançamento criado será removido.')">
                   {% csrf_token %}
-                  <button type="submit" class="text-xs text-slate-400 hover:text-rose-600 transition-colors">Desfazer</button>
+                  <button type="submit" title="Desfazer pagamento"
+                          class="inline-flex items-center justify-center w-9 h-9 rounded-xl border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500 hover:text-white hover:scale-110 transition-all">
+                    <i class="fa-solid fa-rotate-left"></i>
+                  </button>
                 </form>
               {% else %}
-                <a href="{% url 'pagar:pagar' c.pk %}" class="px-3 py-1 bg-brand-50 dark:bg-brand-950/50 text-brand-600 hover:bg-brand-100 rounded-lg text-xs font-medium transition-colors">Marcar como paga</a>
-                <a href="{% url 'pagar:editar' c.pk %}" class="text-slate-400 hover:text-brand-600 transition-colors ml-3" title="Editar"><i class="fa-solid fa-pen"></i></a>
-                <a href="{% url 'pagar:excluir' c.pk %}" class="text-slate-400 hover:text-rose-600 transition-colors ml-2" title="Excluir"><i class="fa-solid fa-trash-can"></i></a>
+                <a href="{% url 'pagar:pagar' c.pk %}" title="Marcar como paga"
+                   class="inline-flex items-center justify-center w-9 h-9 rounded-xl border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white hover:scale-110 text-lg transition-all">
+                  <i class="fa-solid fa-check"></i>
+                </a>
+                <a href="{% url 'pagar:editar' c.pk %}" title="Editar"
+                   class="inline-flex items-center justify-center w-9 h-9 rounded-xl border-2 border-sky-500 bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 hover:bg-sky-500 hover:text-white hover:scale-110 transition-all">
+                  <i class="fa-solid fa-pen"></i>
+                </a>
+                <a href="{% url 'pagar:excluir' c.pk %}" title="Excluir"
+                   class="inline-flex items-center justify-center w-9 h-9 rounded-xl border-2 border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white hover:scale-110 transition-all">
+                  <i class="fa-solid fa-trash-can"></i>
+                </a>
               {% endif %}
+              </div>
             </td>
           </tr>
           {% empty %}
