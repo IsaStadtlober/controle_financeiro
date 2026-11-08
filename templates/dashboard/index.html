@@ -284,7 +284,11 @@
       type: "bar",
       data: {
         labels: dados.evolucao.rotulos,
-        datasets: [{ label: "Gasto", data: dados.categorias.map(function (x) { return x.total; }), backgroundColor: dados.categorias.map(function (x) { return x.cor; }), borderRadius: 6 }]
+        datasets: [
+          { label: "Receitas", data: dados.evolucao.receitas, backgroundColor: "#22c55e", borderRadius: 4 },
+          { label: "Despesas", data: dados.evolucao.despesas, backgroundColor: "#ef4444", borderRadius: 4 },
+          { label: "Resultado", data: dados.evolucao.resultado, type: "line", borderColor: "#3b82f6", backgroundColor: "#3b82f6", borderWidth: 2, tension: 0.2, pointRadius: 3 }
+        ]
       },
       options: {
         interaction: { mode: "index", intersect: false },
